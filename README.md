@@ -42,13 +42,6 @@ python big_red_context_shot_web.py
 ```
 Your browser opens to `http://127.0.0.1:8787`. Big red button awaits. 🔴👀
 
-### 🖥️ Desktop Edition (the brave one)
-```bash
-pip install python-docx mss Pillow
-python big_red_context_shot.py
-```
-If it crashes with something like “macOS 12 (1207) required, have 1206” — that’s the native wheel having a diva moment. See Troubleshooting or switch to Web Edition. 💅
-
 ---
 
 ## 🕹️ Usage (Web Edition)
