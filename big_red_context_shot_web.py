@@ -123,8 +123,7 @@ def take_full_screenshot_to(file_path: Path) -> None:
     with mss() as sct:
         monitor = sct.monitors[0]
         raw = sct.grab(monitor)
-        with open(file_path, "wb") as f:
-            to_png(raw.rgb, raw.size, output=f)
+        to_png(raw.rgb, raw.size, output=str(file_path))
 
 def append_entry(doc_path: Path, context_text: str, screenshot_path: Path) -> Path:
     target = doc_path
