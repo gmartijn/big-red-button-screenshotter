@@ -18,18 +18,10 @@ It’s like a dashcam for your workflow, except it doesn’t judge you for havin
 ## 🧪 Flavors (Both are Web Apps)
 
 ### 1) 🌐 Cross‑Platform Web Edition (Windows/macOS/Linux) — **Recommended**
-- File: `big_red_context_shot_cross.py`
+- File: `big_red_context_shot_web.py`
 - Uses **MSS** (Windows/Linux) and **`screencapture`** on macOS.
 - Lets you set a **Delay before capture** ⏳ so you can Alt‑Tab to the right window first.
 - Writes to: `~/Documents/ContextShots.docx`
-
-### 2) 🍏 macOS Web Edition (Monterey‑friendly)
-- File: `big_red_context_shot_web.py`
-- Uses macOS **`screencapture`** and (optionally) hides the front app for a clean shot (with Accessibility permission).  
-- Also has a **Delay before hiding** ⏱️.
-- Writes to: `~/Documents/ContextShots.docx`
-
-Pick whichever fits your OS mood. Both are low‑maintenance and high‑screenshot.
 
 ---
 
@@ -47,16 +39,9 @@ source venv/bin/activate
 ### Cross‑Platform Web Edition
 ```bash
 pip install flask python-docx mss
-python big_red_context_shot_cross.py
-```
-Your browser opens to `http://127.0.0.1:8788`. Big red button awaits. 🔴👀
-
-### macOS Web Edition
-```bash
-pip install flask python-docx
 python big_red_context_shot_web.py
 ```
-Your browser opens to `http://127.0.0.1:8787`. Button is equally red. 🍎
+Your browser opens to `http://127.0.0.1:8788`. Big red button awaits. 🔴👀
 
 ---
 
