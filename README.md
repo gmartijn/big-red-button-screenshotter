@@ -16,16 +16,13 @@ It’s like a dashcam for your workflow, except it doesn’t judge you for havin
 
 ## 🧪 Variants
 
-### 1) 🌐 Web Edition (macOS 12.6-friendly) — Recommended
+### 1) 🌐 Web Edition (macOS 12.6-friendly)
 No native GUI shenanigans. Uses a local web page with a **big red button**, macOS `screencapture`, and `python-docx`.
 
 - File: `big_red_context_shot_web.py`
 - Creates: `~/Documents/ContextShots.docx` (auto-rolls to `ContextShots (2).docx`, etc.)
 
 **New:** configurable delay **before** the window hides ⏳. Because sometimes you need to move Slack out of frame like a guilty cat. 🐈‍⬛
-
-### 2) 🖥️ Desktop Edition (Tk) — Fancy but picky
-Pretty, but some native wheels may demand macOS 12.7 (build 1207) and sulk on 12.6. If you’re on Monterey 12.6, use the Web Edition unless you enjoy dependency roulette. 🎰
 
 ---
 
