@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
-Big Red Button (Web Edition) - macOS 12.6-friendly
---------------------------------------------------
-Adds a configurable delay BEFORE hiding the frontmost window/app, so you have
-time to arrange your screen after pressing the button.
+Big Red Button — Cross-Platform Web Edition (Windows-friendly)
+--------------------------------------------------------------
+- Windows/Linux: uses MSS to capture the full virtual screen.
+- macOS: uses `screencapture` (native, no extra permissions beyond Screen Recording).
 
-Flow:
-  click -> wait <delay> seconds -> hide front app -> short wait -> screenshot -> log to Word
+Workflow:
+  click -> wait <delay> seconds -> screenshot -> append to Word table
+
+The Word file: ~/Documents/ContextShots.docx
+Two columns per row: [Context + timestamp] | [Screenshot]
+Rotates after 90 rows (ContextShots (2).docx, etc.).
 """
 import os
 import time
 import shlex
+import platform
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -18,30 +23,31 @@ import webbrowser
 
 from flask import Flask, request, render_template_string, redirect, url_for, flash
 
-# Third-party (pure Python)
+# Word
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-APP_TITLE = "Big Red Button - Context + Screenshot (Web)"
+# Screenshot (Windows/Linux)
+from mss import mss
+from mss.tools import to_png
+
+APP_TITLE = "Big Red Button - Context + Screenshot (Cross-Platform)"
 HOST = "127.0.0.1"
-PORT = 8787
+PORT = 8788
 MAX_ROWS_PER_DOC = 90
-DEFAULT_DOC_NAME = "ContextShots.docx"  # saved to ~/Documents
-DEFAULT_DELAY_SECONDS = 2.0            # default wait BEFORE hiding the browser
-POST_HIDE_DELAY_SECONDS = 0.6          # brief wait AFTER hide to allow UI to settle
+DEFAULT_DOC_NAME = "ContextShots.docx"
+DEFAULT_DELAY_SECONDS = 2.0
 
 app = Flask(__name__)
-app.secret_key = "context-shot"  # flash messaging
-
+app.secret_key = "context-shot-cross"
 
 def user_documents_dir() -> Path:
     home = Path.home()
     docs = home / "Documents"
     return docs if docs.exists() else home
-
 
 def next_available_filename(base: Path) -> Path:
     if not base.exists():
@@ -54,7 +60,6 @@ def next_available_filename(base: Path) -> Path:
             return cand
         n += 1
 
-
 def _set_table_column_widths(table, widths_in_inches):
     for idx, width in enumerate(widths_in_inches):
         for cell in table.columns[idx].cells:
@@ -62,9 +67,8 @@ def _set_table_column_widths(table, widths_in_inches):
             tcPr = tc.get_or_add_tcPr()
             tcW = OxmlElement('w:tcW')
             tcW.set(qn('w:type'), 'dxa')
-            tcW.set(qn('w:w'), str(int(width * 1440)))  # 1 inch = 1440 twips
+            tcW.set(qn('w:w'), str(int(width * 1440)))
             tcPr.append(tcW)
-
 
 def _add_title_and_table(doc: Document, title_suffix: str = ""):
     title = doc.add_paragraph()
@@ -77,7 +81,6 @@ def _add_title_and_table(doc: Document, title_suffix: str = ""):
     hdr[0].text = "Context (with timestamp)"
     hdr[1].text = "Screenshot"
     _set_table_column_widths(table, [3.1, 3.1])
-
 
 def ensure_document_and_table(doc_path: Path):
     if doc_path.exists():
@@ -103,7 +106,6 @@ def ensure_document_and_table(doc_path: Path):
         _add_title_and_table(doc)
         return doc, doc.tables[0], doc_path
 
-
 def compute_column_image_width_inches(doc: Document) -> float:
     section = doc.sections[0]
     page_width = section.page_width / 914400
@@ -112,26 +114,19 @@ def compute_column_image_width_inches(doc: Document) -> float:
     usable = page_width - left - right
     return max(2.2, min((usable / 2.0) - 0.15, 3.5))
 
-
 def take_full_screenshot_to(file_path: Path) -> None:
-    # Use macOS 'screencapture' which is present on all systems.
-    # -x: no sound; -t png: force PNG; full screen by default
-    cmd = f'screencapture -x -t png {shlex.quote(str(file_path))}'
-    subprocess.run(cmd, shell=True, check=True)
-
-
-def hide_frontmost_app() -> None:
-    # Send Cmd-H to hide the current frontmost app (usually the browser)
-    osa = ['osascript', '-e', 'tell application "System Events" to keystroke "h" using {command down}']
-    try:
-        subprocess.run(osa, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except Exception:
-        # Best-effort; if Accessibility permission not granted, ignore.
-        pass
-
+    system = platform.system().lower()
+    if system == "darwin":
+        cmd = f'screencapture -x -t png {shlex.quote(str(file_path))}'
+        subprocess.run(cmd, shell=True, check=True)
+        return
+    with mss() as sct:
+        monitor = sct.monitors[0]
+        raw = sct.grab(monitor)
+        with open(file_path, "wb") as f:
+            to_png(raw.rgb, raw.size, output=f)
 
 def append_entry(doc_path: Path, context_text: str, screenshot_path: Path) -> Path:
-    # If current file is full, rotate
     target = doc_path
     if target.exists():
         doc_tmp = Document(str(target))
@@ -144,15 +139,12 @@ def append_entry(doc_path: Path, context_text: str, screenshot_path: Path) -> Pa
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     row = table.add_row()
     row.cells[0].text = f"{ts} — {context_text.strip() if context_text else '(no context provided)'}"
-
     p = row.cells[1].paragraphs[0]
     run = p.add_run()
     width = compute_column_image_width_inches(doc)
     run.add_picture(str(screenshot_path), width=Inches(width))
-
     doc.save(str(target))
     return target
-
 
 HTML = """
 <!doctype html>
@@ -186,7 +178,7 @@ HTML = """
       const btn = document.getElementById('captureBtn');
       const delay = document.getElementById('delay').value || '0';
       btn.disabled = true;
-      btn.innerText = "Will hide in " + delay + "s…";
+      btn.innerText = "Capture in " + delay + "s…";
       document.getElementById('form').submit();
     }
   </script>
@@ -194,7 +186,7 @@ HTML = """
 <body>
   <div class="card">
     <h1>{{ title }}</h1>
-    <p class="sub">Click the big red button to capture a screenshot and log it to Word.</p>
+    <p class="sub">Cross-platform (Windows/macOS/Linux). Click the big red button to capture and log to Word.</p>
     {% with messages = get_flashed_messages() %}
       {% if messages %}
         {% for m in messages %}
@@ -209,13 +201,13 @@ HTML = """
           <textarea id="context" name="context" placeholder="What is the context?"></textarea>
         </div>
         <div>
-          <label for="delay">Delay before hiding (seconds)</label>
+          <label for="delay">Delay before capture (seconds)</label>
           <input id="delay" name="delay" type="number" step="0.1" min="0" max="60" value="{{ delay }}">
         </div>
       </div>
       <div class="actions">
         <button id="captureBtn" type="button" class="btn btn-red" onclick="onCaptureClick()">CAPTURE & LOG</button>
-        <span class="hint">The app will wait, hide your browser, then snapshot the screen.</span>
+        <span class="hint">Use the delay to alt-tab to the target window before the shot.</span>
       </div>
     </form>
   </div>
@@ -223,20 +215,16 @@ HTML = """
 </html>
 """
 
-
 @app.get("/")
 def index():
-    # Use query param to keep the chosen delay in the UI
     try:
         delay = float(request.args.get("delay", DEFAULT_DELAY_SECONDS))
     except Exception:
         delay = DEFAULT_DELAY_SECONDS
     return render_template_string(HTML, title=APP_TITLE, delay=delay)
 
-
 @app.post("/capture")
 def capture():
-    # Parse delay from form; clamp to sensible bounds
     try:
         delay = float(request.form.get("delay", DEFAULT_DELAY_SECONDS))
     except Exception:
@@ -248,19 +236,14 @@ def capture():
     out_dir.mkdir(parents=True, exist_ok=True)
     doc_path = out_dir / DEFAULT_DOC_NAME
 
-    # Wait BEFORE hiding the browser (user-requested feature)
     if delay > 0:
         time.sleep(delay)
 
-    # Hide the browser (frontmost app), small delay, take screenshot
-    hide_frontmost_app()
-    time.sleep(POST_HIDE_DELAY_SECONDS)
     tmp_png = out_dir / f"context_shot_{int(time.time()*1000)}.png"
     try:
         take_full_screenshot_to(tmp_png)
         saved_to = append_entry(doc_path, context, tmp_png)
-        msg = f"Saved to {saved_to} (delay={delay:.1f}s)"
-        flash(msg)
+        flash(f"Saved to {saved_to} (delay={delay:.1f}s)")
     except Exception as e:
         flash(f"Error: {e}")
     finally:
@@ -270,15 +253,12 @@ def capture():
         except Exception:
             pass
 
-    # Preserve the chosen delay in the UI
     return redirect(url_for('index', delay=f"{delay:.1f}"))
-
 
 def main():
     url = f"http://{HOST}:{PORT}"
     webbrowser.open(url, new=2)
     app.run(host=HOST, port=PORT, debug=False)
-
 
 if __name__ == "__main__":
     main()
