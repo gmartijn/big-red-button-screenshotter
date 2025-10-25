@@ -1,151 +1,163 @@
-# 🔴 Big Red Button — Context + Screenshot Logger (Web Only)
+# 🔴 Big Red Button — Context + Screenshot Logger (Web App)  
+> *“Because sometimes the only context is: I panicked and clicked the red thing.”* 🧠💥
 
-> For when your brain says “What was I doing?” and your mouse says “PANIC!” 🧠🚨  
-> This is the **web** edition(s) only: fast, friendly, and allergic to native GUI drama.
+Welcome to the tiniest productivity upgrade since “rename file to final_v9_REALLY_FINAL.docx.”  
+This web app gives you a **Big Red Button** in your browser that will:
 
-This tiny tool gives you a **Big Red Button** in your browser that will:
-1) Grab a **full-screen screenshot** 📸,
-2) Ask (or accept) your **Context** 📝,
-3) Stamp the **date & time** 🕒,
-4) Paste everything into a **2‑column Word table** 🧾:  
-   **Left:** Context (+ timestamp) • **Right:** Screenshot.  
-5) Auto‑rotate to a new doc after **90 entries** 🔄 (`ContextShots (2).docx`, etc.).
+- 📸 **Grab a full‑screen screenshot** (desktop capture).  
+- 📝 Ask for your **Context** (or accept what you typed already).  
+- 🕒 Stamp a **timestamp** (because your auditor friend loves receipts).  
+- 🧾 Append everything to a **2‑column Word table**: **Left = Context+time**, **Right = Screenshot**.  
+- 🔁 **Auto‑roll** to new files after 90 entries (`ContextShots (2).docx`, etc.).  
+- 🌐 **Website Poller** (optional): enter a URL + interval → headless browser snaps it on schedule and logs it, too.
 
-It’s like a dashcam for your workflow, except it doesn’t judge you for having 87 Chrome tabs named “New Tab.” 🙈✨
-
----
-
-## 🧪 Flavors (Both are Web Apps)
-
-### 1) 🌐 Cross‑Platform Web Edition (Windows/macOS/Linux) — **Recommended**
-- File: `big_red_context_shot_web.py`
-- Uses **MSS** (Windows/Linux) and **`screencapture`** on macOS.
-- Lets you set a **Delay before capture** ⏳ so you can Alt‑Tab to the right window first.
-- Writes to: `~/Documents/ContextShots.docx`
+It’s like a dashcam for your workflow, but with fewer car metaphors and more “oh right, *that’s* what I was doing.” 🚗➡️🖥️
 
 ---
 
-## ⚙️ Install
+## 🧪 What’s inside? (Features at a glance)
 
-Create a virtual environment (your future self will applaud): 💌
+- 🔴 **Big Red Button** — click to capture the desktop after a small delay (so you can Alt‑Tab with dignity).  
+- ⏳ **Configurable delay** — set your seconds in the UI; we remember it because we care.  
+- 📚 **Word doc output** — a single table that keeps your evidence tidy and your future self grateful.  
+- 🤝 **Thread‑safe writes** — manual captures and the website poller won’t trip over each other.  
+- 🕵️ **Auditor‑approved vibes** — timestamped context + screenshot = immaculate paper trail. (Hi auditors! We see you 👋. Please stop asking for “one more sample,” it’s 4:59 pm.)  
+- 🧰 **Cross‑platform** — Windows/macOS/Linux (desktop capture via MSS on Win/Linux; `screencapture` on macOS).  
+- 🌍 **Headless website screenshots** — point at a URL, pick an interval, let it rain PNGs into your doc.
+
+---
+
+## ⚙️ Install (pick your shell flavor)
+
 ```bash
 python -m venv venv
 # Windows:
-venv\Scriptsctivate
+venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 ```
 
-### Cross‑Platform Web Edition
+Install deps:
 ```bash
-pip install flask python-docx mss
-python big_red_context_shot_web.py
+pip install flask python-docx mss selenium webdriver-manager
 ```
-Your browser opens to `http://127.0.0.1:8788`. Big red button awaits. 🔴👀
+
+> 🔧 First website-capture run will download a matching ChromeDriver. Have Chrome/Chromium installed and internet available.
 
 ---
 
-## 🕹️ Usage
+## ▶️ Run it
 
-1. Open the page (it opens automatically). 🌍  
-2. Type your **Context**. 📝  
-3. Set your **Delay** (seconds). ⏱️  
-   - Cross‑platform: “Delay before capture.”  
-   - macOS: “Delay before hiding,” then a tiny settle, then capture.  
-4. Hit **CAPTURE & LOG**. 💥  
-5. A row is appended to your Word doc: **Context + timestamp** | **Screenshot**. 📄➡️🖼️
+```bash
+python big_red_context_shot_cross.py
+```
+Your browser will open to `http://127.0.0.1:8788` with two sections:
+1) **Manual Desktop Capture** — type Context, set Delay, click **CAPTURE & LOG**.  
+2) **Website Poller (Headless)** — enter URL + Interval seconds → **START POLLER**. Use **STOP POLLER** to end.
 
-**Pro tip:** Your chosen delay persists after each capture so you don’t have to re‑type it. We respect your procrastination preferences. 😌
+There’s also a **Quick Test: One‑off Website Screenshot** — for that instant “does it work?” satisfaction. 🎯
 
 ---
 
-## 🧾 Output Format
+## 🕹️ Usage flow (Manual)
 
-The Word file contains a single table:
+1. Type your **Context**.  
+2. Set **Delay before capture** (e.g., `2.0`).  
+3. Alt‑Tab to your target app/window, compose yourself, fix your posture.  
+4. Click **CAPTURE & LOG** → we wait, snapshot, and append to your Word file.
+
+**Where’s my file?**  
+We write to `~/Documents/ContextShots.docx` and roll over to `ContextShots (2).docx`, `(3)`, … as needed.
+
+---
+
+## 🧾 Output format
+
+The Word document is a two‑column table:
 
 | Context (with timestamp) | Screenshot |
-| --- | --- |
-| `2025-10-21 12:34:56 — Investigating “Why is CPU at 437% on a toaster?”` | [screenshot image] |
+|---|---|
+| `2025-10-25 09:42:17 — Debugging: "Why is CPU at 437% on a toaster?"` | *(screenshot image)* |
 
-- Images are scaled to fit the right column. 🔍  
-- After 90 rows, a fresh document starts automatically. 🆕  
-- Rename or move the docs whenever you like; we’ll happily generate a new one next time. 📦
-
----
-
-## 🔐 Permissions You May See
-
-- **macOS Screen Recording**: to actually capture the screen (System Settings → Privacy & Security → Screen Recording). 🎥  
-- **macOS Accessibility** (macOS web edition only): to let AppleScript press Cmd‑H and hide the front app. 🫥
-
-If the first screenshot is black on macOS, it’s the Screen Recording permission. macOS is shy like that. 🫣
+- Images are auto‑scaled to the right column.  
+- The context cell stores **timestamp + your text** — neat, searchable, and suspiciously professional.
 
 ---
 
-## 🛠️ Troubleshooting (a.k.a. “Why is my life like this?”)
+## 🔐 Permissions (macOS folks)
 
-- **Windows error “No module called `exceptions`”**  
-  You installed the wrong package. Run:  
+- **Screen Recording** → System Settings » Privacy & Security » Screen Recording (grant for your Terminal/Python).  
+If your first screenshot is black, that’s macOS being shy. Give it a pat (and a permission). 🫣
+
+---
+
+## 🩹 Troubleshooting (a.k.a. “Why, computers?”)
+
+- **Windows:** `ModuleNotFoundError: No module named 'exceptions'`  
+  You installed the wrong package. Fix it:  
   ```bash
   pip uninstall -y docx
   pip install --upgrade python-docx
   ```
 
-- **Windows error “expected str, bytes or os.PathLike object, not BufferedWriter”**  
-  Fixed in the latest script: we pass a **file path** to `mss.tools.to_png`, not a file object. Grab the newest version.
+- **Windows/Linux (MSS):** TypeError about `BufferedWriter`  
+  You’re on an MSS version that wants a **path string**. This app uses `to_png(..., output=str(path))`, so you’re golden. Grab the latest script if needed.
 
-- **First screenshot is black (macOS)**  
-  Grant **Screen Recording** to your Terminal/Python app. ✅
+- **Website screenshots don’t appear**  
+  - Ensure **Chrome/Chromium** is installed.  
+  - First run needs internet to fetch **chromedriver**.  
+  - Some sites block headless captures; try the **Quick Test**. If blocked, we can add a non‑headless option.
 
-- **Browser didn’t hide (macOS web edition)**  
-  Grant **Accessibility** permission so AppleScript can press Cmd‑H. 🧑‍⚖️
-
-- **Images look huge/tiny**  
-  We scale to fit the column. If you want per‑row zoom, that’s Feature Request #YAGNI‑023. 🔎
+- **Word says the doc is in use**  
+  Close it in Word. We’re good, but not *time‑travel good*. 🕳️⏳
 
 ---
 
 ## ❓ FAQ (Frequently Accused Questions)
 
-**Q: Can it capture just one monitor?**  
-A: Currently captures the full virtual screen. Multi‑monitor finesse is doable—say the word. 🖥️🖥️
+**Q: Can I choose which monitor to capture?**  
+A: Currently it grabs the virtual full desktop. Per‑monitor capture is coming the moment my coffee finishes loading. ☕️
 
-**Q: Can it auto‑tag or categorize?**  
-A: Absolutely. We can add tags/categories columns or even per‑row labels. ☕️🏷️
+**Q: Can I tag entries or add categories?**  
+A: Yes! We can add a tags column or auto‑prefix contexts. Tell me your taxonomy dreams. 🏷️
 
-**Q: Where does it store my data?**  
-A: Locally, in your `~/Documents`. No clouds were harmed in the making of this app. ☁️❌
+**Q: Can the website poller save to a separate doc?**  
+A: Easy. We can auto‑name as `ContextShots-SITES-YYYY-MM-DD.docx` or per‑URL docs.
 
-**Q: Can I change the output path or auto‑name by date?**  
-A: Yes, that’s a quick tweak. Want `ContextShots-YYYY‑MM‑DD.docx`? Easy.
-
-**Q: Will it fix my meeting notes?**  
-A: It will at least remember what you were looking at when you decided to take the note. Which is 90% of consulting anyway. 📓😅
+**Q: Will this satisfy our auditors?**  
+A: It gives you **timestamped evidence** with neat context in a Word doc. Auditors love that.  
+   (Hi again, auditors. We made extra columns just for you. Please stop asking for screenshots of screenshots. 🙏📑😂)
 
 ---
 
-## 🧠 Nerdy Bits
+## 🧠 Under the hood
 
-- **Stack:** Flask + `python-docx` + `mss` (Win/Linux) or `screencapture` (macOS). 🧩  
-- Word table column widths set to ~3.1″ each (best‑effort; Word is a diva too). 💃  
-- Auto‑rollover after 90 rows to keep files nimble and your future self sane. 🪄
+- **Flask** powers the local web UI.  
+- **python‑docx** writes `.docx` like a polite robot.  
+- **MSS** captures desktop on Windows/Linux; **`screencapture`** does it on macOS.  
+- **Selenium + webdriver‑manager** drive headless Chrome for website screenshots.  
+- Writes to Word are **locked** so manual and automated captures don’t step on each other’s toes. 👣
 
 ---
 
-## 📝 Changelog
+## 📝 Changelog (highlights)
 
-- **2025‑10‑22**: Removed desktop references (web‑only glory). Updated troubleshooting for Windows. 🎯  
-- **2025‑10‑21**: Added configurable pre‑capture/pre‑hide delay in web editions. 😊  
-- **2025‑10‑20**: Initial release. Button very red. Spirits high. 🔴🎉
+- **2025‑10‑25** — UI tweak: context field won’t bully the seconds box; added responsive stacking.  
+- **2025‑10‑24** — Website Poller + Quick Test route; better status in UI (last saved/error/time).  
+- **2025‑10‑23** — Cross‑platform capture stabilized; fixed Windows path/`to_png` quirks.  
+- **2025‑10‑22** — Web‑only glory; removed desktop drama.  
+- **2025‑10‑21** — Added configurable pre‑capture delay.  
+- **2025‑10‑20** — Initial release. Button very red. Spirits high. 🎉
 
 ---
 
 ## 📜 License
 
-Pick your favorite permissive license (MIT/BSD/Apache‑2.0). Or go full corporate and call Legal; we’ll wait here with snacks. 🍪📞
+Pick your favorite permissive license (MIT/BSD/Apache‑2.0). Or call Legal and we’ll send snacks while they decide. 🍪📞
 
 ---
 
 ## 🙌 Credits
 
-You, glorious button‑clicker. And the unsung heroes: `mss`, `python-docx`, Flask, and the humble `screencapture`. 💼💸
+You, glorious button‑clicker.  
+Also: Flask, python‑docx, MSS, Selenium, your GPU fan, and the unsung hero known as “screenshots_folder_final_final.” 💼💨
